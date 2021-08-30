@@ -6,10 +6,10 @@
 
 ## On the command line
 
-Evaluate a template directly:
+Directly evaluate a template from stdin:
 
 ```sh
-$ cat <<EOF | combo -a 'NAMESPACE=foo,bar' -a 'NAME=baz' -
+$ cat <<EOF | combo eval -a 'NAMESPACE=foo,bar' -a 'NAME=baz' -
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -105,16 +105,16 @@ roleRef:
 
 ### As a controller
 
-If `combo` is running as a controller in the current kubectl context's cluster, create a `Pattern`:
+If `combo` is running as a controller in the current kubectl context's cluster, create a `Template`:
 
 ```sh
 $ cat <<EOF | kubectl create -f -
 apiVersion: combo.io/v1alpha1
-kind: Pattern
+kind: Template
 metadata:
   name: feature
 spec:
-  template: |
+  body: |
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
@@ -150,16 +150,16 @@ spec:
 EOF
 ```
 
-Assuming the existance of the `feature-controller` and `feature-user` `ClusterRoles` as well as the `feature`, `staging`, and `prod` `Namespaces`, instantiate all resource/argument combinations with a `CombinationSet`:
+Assuming the existance of the `feature-controller` and `feature-user` `ClusterRoles` as well as the `feature`, `staging`, and `prod` `Namespaces`, instantiate all resource/argument combinations with a `Combination`:
 
 ```sh
 $ cat <<EOF | kubectl create -f -
 apiVersion: combo.io/v1alpha1
-kind: CombinationSet
+kind: Combination
 metadata:
   name: enable-feature
 spec:
-  pattern:
+  template:
     name: feature
   arguments:
   - key: TARGET_GROUP
@@ -173,10 +173,10 @@ spec:
 EOF
 ```
 
-Get all of the `RoleBindings` applied by `combo` for the `CombinationSet` above:
+Get all of the `RoleBindings` applied by `combo` for the `Combination` above:
 
 ```sh
-$ kubectl get rolebindings -A -l 'combo.io/set'=enable-feature
+$ kubectl get rolebindings -A -l 'combo.io/combination'=enable-feature
 NAMESPACE   NAME                 ROLE                             AGE
 prod        feature-controller   clusterrole/feature-controller   1m
 prod        feature-user-gpl8b   clusterrole/feature-user         1m
